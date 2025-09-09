@@ -88,7 +88,7 @@ const newGenerator = async (
     let textStartString =
         textify(startToken) == "" ? "Start Characters" : textify(startToken);
 
-    console.log({ textStartString }, { startToken });
+    console.log(`Starting Generation with : ${textStartString}`);
     var chain: string[] = [...startToken];
     var x = 0;
     while (true) {
@@ -175,8 +175,6 @@ const main = async () => {
         );
     }
 
-    console.log("Starting Generation");
-
     const output = await newGenerator(
         transitions,
         undefined,
@@ -185,7 +183,13 @@ const main = async () => {
     );
 
     // run the generator with params
+    console.log("\n");
+    console.log("---OUTPUT---");
+    console.log("\n");
     console.log(output);
+    console.log("\n");
+    console.log("---END---");
+    console.log("\n");
 };
 
 if (import.meta.main) main();

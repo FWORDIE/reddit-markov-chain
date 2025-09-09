@@ -55,7 +55,6 @@ export const compileCorpus = async (file: string, key: string) => {
 
 // Tokenise text
 export const tokenize = (corpusText: string) => {
-    console.log(corpusText)
     try {
         let corpus = corpusText
             .replaceAll(newlinesRegex, NEWLINE_PLACEHOLDER) // New line replace
@@ -73,7 +72,6 @@ export const tokenize = (corpusText: string) => {
 const PARAGRAPH_CHARACTER = "\n\n";
 
 export const textify = (tokens) => {
-    console.log(tokens)
     return tokens
         .join("")
         .replaceAll(NEWLINE_PLACEHOLDER, PARAGRAPH_CHARACTER)
