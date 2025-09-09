@@ -1,7 +1,13 @@
 // deno-lint-ignore-file no-explicit-any
 // import { textify, tokenize } from "./tokeniser.ts";
 import { parseArgs } from "jsr:@std/cli/parse-args";
-import { compileCorpus, endString, textify, tokenize } from "./tokeniser.ts";
+import {
+    compileCorpus,
+    endString,
+    textify,
+    tokenize,
+    startString,
+} from "./tokeniser.ts";
 
 // Args
 // r: turn output into a rhyming poem - default:false
@@ -9,8 +15,9 @@ import { compileCorpus, endString, textify, tokenize } from "./tokeniser.ts";
 // f: location json file that has data - required
 //    file data must be a array of objects
 // k: object key of data e.g. 'title', 'body'
-// t: retrain makrov chain - default:true
+// t: retrain makrov chain - default:false
 // n: max number of tokens to generate - default:'100'
+// s: sample size, bigger is more deterministic
 
 const flags = parseArgs(Deno.args, {
     boolean: ["r", "c", "t"],
@@ -59,17 +66,29 @@ const collectTransitions = (samples: string[][]) => {
     }, {});
 };
 
+const findAStart = (transitions: Record<string | number | symbol, never>) => {
+    const possibleStartArray = [];
+    for (const key in transitions) {
+        if (key[0] == startString) {
+            possibleStartArray.push(key);
+        }
+    }
+    return pickRandom(possibleStartArray);
+};
+
 // generator
 const newGenerator = async (
     transitions: any,
-    startString: string | undefined,
+    startingString: string | undefined,
     wordsCount: number,
     continuous: boolean,
 ) => {
-    const startToken = tokenize(
-        startString ?? pickRandom(Object.keys(transitions)),
-    );
-    console.log({ startToken });
+    const startToken = tokenize(startingString ?? findAStart(transitions));
+
+    let textStartString =
+        textify(startToken) == "" ? "Start Characters" : textify(startToken);
+
+    console.log({ textStartString }, { startToken });
     var chain: string[] = [...startToken];
     var x = 0;
     while (true) {
@@ -97,7 +116,6 @@ const findNextToken = (
 
     const possibleTokens = transitions[key];
 
-    // console.log({ key }, { possibleTokens });
     const nextToken = pickRandom(possibleTokens);
     //   console.log( { nextToken });
     return [nextToken];
@@ -109,14 +127,16 @@ var transitions = {};
 var sampleSize = 2;
 
 const main = async () => {
-    if (!flags.f) {
-        throw Error("Error: No Source File defined [--f]");
-    }
-    if (!flags.k) {
-        throw Error("Error: No Object Key defined [--k]");
-    }
     if (flags.t) {
+        if (!flags.f) {
+            throw Error("Error: No Source File defined [--f]");
+        }
+        if (!flags.k) {
+            throw Error("Error: No Object Key defined [--k]");
+        }
+
         sampleSize = Number(flags.s);
+
         try {
             const compliedCorpus = await compileCorpus(flags.f, flags.k);
             if (!compliedCorpus) {
@@ -129,13 +149,16 @@ const main = async () => {
                 samples = sliceCorpus(corpus, sampleSize);
                 // console.log(samples);
                 transitions = collectTransitions(samples);
-                // console.log({ transitions });
                 console.log(
                     `New Transitions Created: ${Object.keys(transitions).length} Transitions`,
                 );
+                let modelFile = {
+                    sampleSize: sampleSize,
+                    transitions: transitions,
+                };
                 await Deno.writeTextFile(
-                    "model.txt",
-                    JSON.stringify(transitions),
+                    "model.json",
+                    JSON.stringify(modelFile),
                 );
                 console.log(`Saving Transitions Chain`);
             }
@@ -144,7 +167,9 @@ const main = async () => {
             return;
         }
     } else {
-        transitions = JSON.parse(await Deno.readTextFile("model.txt"));
+        const modelData = JSON.parse(await Deno.readTextFile("model.json"));
+        sampleSize = modelData.sampleSize;
+        transitions = modelData.transitions;
         console.log(
             `Old Transitions Loaded: ${Object.keys(transitions).length} Transitions`,
         );
@@ -158,6 +183,8 @@ const main = async () => {
         Number(flags.n),
         flags.c,
     );
+
+    // run the generator with params
     console.log(output);
 };
 
