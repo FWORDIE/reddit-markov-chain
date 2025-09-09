@@ -49,6 +49,7 @@ const main = async () => {
     }
 
     if (dataArray.length > 1) {
+        // give option to rename
         await Deno.writeTextFile("redditData.json", JSON.stringify(dataArray));
     }
 };
