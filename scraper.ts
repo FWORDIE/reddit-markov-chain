@@ -1,7 +1,34 @@
-import { url } from "node:inspector";
 import * as cheerio from "npm:cheerio";
+import { parseArgs } from "jsr:@std/cli/parse-args";
 
-const delay = (ms: number) => new Promise((res) => setTimeout(res, ms)); //Basic delay func
+// Args for commandLine
+// h: see help info
+// f: file name to save
+const flags = parseArgs(Deno.args, {
+    boolean: ["h"],
+    string: ["f"],
+    default: { f: "redditData", h: false },
+    negatable: ["h"],
+});
+
+// Basic delay func
+const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+// List of search Terms
+const searchTerms = ["ChatGPT", "ai"];
+
+// List of Subreddits
+const subReddits = [
+    "relationship_advice",
+    "dating_advice",
+    "offmychest",
+    "AmItheAsshole",
+    "relationships",
+    "confessions",
+];
+
+// Max Number of pages to scrape
+const pageMax = 10;
 
 // constructing URL to scrape
 const URLFunc = (subreddit: string, searchTerm: string) => {
@@ -14,16 +41,7 @@ const URLFunc = (subreddit: string, searchTerm: string) => {
     );
 };
 
-const searchTerms = ["ChatGPT", "ai"]; // List of search Terms
-const subReddits = [
-    "relationship_advice",
-    "dating_advice",
-    "offmychest",
-    "AmItheAsshole",
-    "relationships",
-    "confessions",
-]; // List of Subreddits
-
+// object array we add data to
 let dataArray: {
     title: string;
     body: string;
@@ -33,12 +51,33 @@ let dataArray: {
     searchTerm: string;
 }[] = [];
 
-const pageMax = 10;
+// main function
+const main = async (filename: string, help: boolean) => {
+    if (help) {
+        console.log("-- Scraper Help --");
+        console.log("-- Basic Info -- ");
+        console.log(
+            "This scraper scrapes reddit based off a list of subreddits and search terms.",
+        );
+        return;
+    }
 
-const main = async () => {
-    for (const subReddit of subReddits) {
+    const subRedditsUser = prompt(
+        "Which subreddits should we scrape? (list with commas seprating)",
+        subReddits.join(),
+    )
+        ?.replaceAll(" ", "")
+        .split(",");
+    console.log(subRedditsUser);
+
+    if (!subRedditsUser || subRedditsUser.length < 1) {
+        console.log("Your list of");
+        return;
+    }
+
+    for (const subReddit of subRedditsUser) {
         for (const searchTerm of searchTerms) {
-            await delay(1000);
+            await delay(1000); // delay so we don't get blocked for by the rate limit
             await scrape(
                 0,
                 URLFunc(subReddit, searchTerm),
@@ -49,7 +88,6 @@ const main = async () => {
     }
 
     if (dataArray.length > 1) {
-        // give option to rename
         await Deno.writeTextFile("redditData.json", JSON.stringify(dataArray));
     }
 };
@@ -101,4 +139,4 @@ const scrape = async (
     }
 };
 
-if (import.meta.main) main();
+if (import.meta.main) main(flags.f, flags.h);
