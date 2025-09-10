@@ -188,11 +188,11 @@ const main = async () => {
 
     // run the generator with params
     console.log("\n");
-    console.log("---OUTPUT---");
+    console.log("---OUTPUT START---");
     console.log("\n");
     console.log(output);
     console.log("\n");
-    console.log("---END---");
+    console.log("---OUTPUT END---");
     console.log("\n");
 };
 

@@ -136,7 +136,7 @@ const main = async (filename: string, help: boolean) => {
 
     // If data Array has elements, then save it to a file
     if (dataArray.length > 1) {
-        await Deno.writeTextFile(`${filename}.json`, JSON.stringify(dataArray));
+        await Deno.writeTextFile(`data/${filename}.json`, JSON.stringify(dataArray));
     }
 };
 
