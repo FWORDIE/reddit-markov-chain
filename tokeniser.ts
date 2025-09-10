@@ -1,7 +1,7 @@
 // Modified from here: https://dev.to/bespoyasov/text-generation-with-markov-chains-in-javascript-i38
 
 // Start and End Strings
-export const startString ="¤";
+export const startString = "¤";
 export const endString = "±";
 
 // Identify new space and repalce with a specail char
@@ -21,7 +21,7 @@ const tokenizeRegex = new RegExp(
 );
 
 // Checks if string is empty
-const exists = (entity) => {
+const exists = (entity: string) => {
     return !!entity;
 };
 
