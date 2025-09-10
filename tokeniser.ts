@@ -28,19 +28,27 @@ const exists = (entity: string) => {
 // Compile Corpus from JSON
 export const compileCorpus = async (file: string, key: string) => {
     try {
+        // Import json with data
+        // Use scraper.ts to do get fresh data
         const corpusJSON = await import(file, {
             with: { type: "json" },
         });
 
+        // empty string where we store complied data
         let corpusText = "";
 
-        corpusJSON.default.forEach((entry) => {
-            if (entry[key]) {
-                corpusText += startString;
-                corpusText += entry[key];
-                corpusText += endString;
-            }
-        });
+        //loop of corpus of data and for each entry add it's value at 'key' to the Corpus Text
+        corpusJSON.default.forEach(
+            (entry: Record<string | number | symbol, never>) => {
+                if (entry[key]) {
+                    corpusText += startString;
+                    corpusText += entry[key];
+                    corpusText += endString;
+                }
+            },
+        );
+
+        // If the corpus is too small, throw error
         if (corpusText.length < 4) {
             throw Error(
                 "Corpus Text too small, usally its because the object key is wrong",
@@ -54,9 +62,10 @@ export const compileCorpus = async (file: string, key: string) => {
 };
 
 // Tokenise text
+// e.g 'hello I'm Dave' -> ['hello', ' ', 'I',''','m',' ','Dave']
 export const tokenize = (corpusText: string) => {
     try {
-        let corpus = corpusText
+        const corpus = corpusText
             .replaceAll(newlinesRegex, NEWLINE_PLACEHOLDER) // New line replace
             .replaceAll("“", '"') // Replace all “ to "
             .replaceAll("`", "'") // Replace all ` to '
@@ -71,10 +80,15 @@ export const tokenize = (corpusText: string) => {
 
 const PARAGRAPH_CHARACTER = "\n\n";
 
-export const textify = (tokens) => {
-    return tokens
-        .join("")
-        .replaceAll(NEWLINE_PLACEHOLDER, PARAGRAPH_CHARACTER)
-        .replaceAll(startString, "")
-        .replaceAll(endString, "");
+// Texitify tokens
+// e.g ['hello', ' ', 'I',''','m',' ','Dave']  -> 'hello I'm Dave'
+export const textify = (tokens: string[] | undefined) => {
+    if (tokens) {
+        return tokens
+            .join("")
+            .replaceAll(NEWLINE_PLACEHOLDER, PARAGRAPH_CHARACTER)
+            .replaceAll(startString, "")
+            .replaceAll(endString, "");
+    }
+    throw Error(`textify didnt receive Tokens, it received ${tokens}`);
 };

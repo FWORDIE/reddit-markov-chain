@@ -1,4 +1,3 @@
-// deno-lint-ignore-file no-explicit-any
 // import { textify, tokenize } from "./tokeniser.ts";
 import { parseArgs } from "jsr:@std/cli/parse-args";
 import {
@@ -8,6 +7,11 @@ import {
     tokenize,
     startString,
 } from "./tokeniser.ts";
+
+// TS type
+type transitionType = {
+    [key: string]: string[];
+};
 
 // Args
 // r: turn output into a rhyming poem - default:false
@@ -27,11 +31,12 @@ const flags = parseArgs(Deno.args, {
 });
 
 // Return random Number between Min and Max
-const random = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const random = (min: number, max: number) =>
+    Math.floor(Math.random() * (max - min + 1)) + min;
 // Return random from list
-const pickRandom = (list) => list[random(0, list.length - 1)];
+const pickRandom = (list: string[]) => list[random(0, list.length - 1)];
 //join array of strings to one string
-const fromTokens = (tokens) => tokens.join("");
+const fromTokens = (tokens: string[]) => tokens.join("");
 
 // Slices the text/corpus into chains
 const sliceCorpus = (corpus: string[], sampleSize: number) => {
@@ -45,7 +50,7 @@ const sliceCorpus = (corpus: string[], sampleSize: number) => {
 };
 
 const collectTransitions = (samples: string[][]) => {
-    return samples.reduce((transitions: any, sample: string[]) => {
+    return samples.reduce((transitions: transitionType, sample: string[]) => {
         // Split the sample into key tokens and the transition token:
         const lastIndex = sample.length - 1;
         const lastToken = sample[lastIndex];
@@ -66,31 +71,33 @@ const collectTransitions = (samples: string[][]) => {
     }, {});
 };
 
-const findAStart = (transitions: Record<string | number | symbol, never>) => {
-    const possibleStartArray = [];
+// Returns a random token that starts with the startString
+const findAStart = (transitions: transitionType) => {
+    const possibleStartArray: string[] = [];
     for (const key in transitions) {
+        // Checks if this transition key starts with the startString
         if (key[0] == startString) {
             possibleStartArray.push(key);
         }
     }
+    //returns a random one
     return pickRandom(possibleStartArray);
 };
 
 // generator
-const newGenerator = async (
-    transitions: any,
+const newGenerator = (
+    transitions: transitionType,
     startingString: string | undefined,
     wordsCount: number,
     continuous: boolean,
 ) => {
     const startToken = tokenize(startingString ?? findAStart(transitions));
 
-    let textStartString =
+    const textStartString =
         textify(startToken) == "" ? "Start Characters" : textify(startToken);
 
     console.log(`Starting Generation with : ${textStartString}`);
-    var chain: string[] = [...startToken];
-    var x = 0;
+    let chain = [...(startToken as string[])];
     while (true) {
         chain = [...chain, ...findNextToken(chain, transitions)];
 
@@ -106,10 +113,7 @@ const newGenerator = async (
     return textify(chain);
 };
 
-const findNextToken = (
-    chain: string[],
-    transitions: Record<string | number | symbol, never>,
-) => {
+const findNextToken = (chain: string[], transitions: transitionType) => {
     const lastTokens = chain.slice(-(sampleSize - 1));
 
     const key = fromTokens(lastTokens);
@@ -122,9 +126,9 @@ const findNextToken = (
 };
 
 // Global Vars
-var samples = [];
-var transitions = {};
-var sampleSize = 2;
+let samples = [];
+let transitions: transitionType = {};
+let sampleSize = 2;
 
 const main = async () => {
     if (flags.t) {
@@ -152,7 +156,7 @@ const main = async () => {
                 console.log(
                     `New Transitions Created: ${Object.keys(transitions).length} Transitions`,
                 );
-                let modelFile = {
+                const modelFile = {
                     sampleSize: sampleSize,
                     transitions: transitions,
                 };

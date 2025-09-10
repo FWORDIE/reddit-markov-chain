@@ -87,10 +87,9 @@ const main = async (filename: string, help: boolean) => {
         .filter(Boolean); //  remove blank items in array
     console.log(subRedditsUser);
     if (!subRedditsUser || subRedditsUser.length < 1) {
-        console.log("ERROR: No Subreddits Listed");
-        return;
+        throw Error("No Subreddits Listed");
     }
-    // Get Search terms to serach
+    // Get Search terms to search
     const searchTermsUser = prompt(
         "Which search terms should we scrape for? (list with commas seprating)",
         searchTermsDefaults.join(", "),
@@ -100,8 +99,7 @@ const main = async (filename: string, help: boolean) => {
         .filter(Boolean); //  remove blank items in array
 
     if (!searchTermsUser || searchTermsUser.length < 1) {
-        console.log("ERROR: No serach terms Listed");
-        return;
+        throw Error("No search terms Listed");
     }
 
     // Get max pages to scrape
@@ -117,21 +115,23 @@ const main = async (filename: string, help: boolean) => {
     ) {
         pageMax = Number(userPageMax);
     } else {
-        console.log("ERROR: Page number not valid (must be between 0 and 50");
-        return;
+        throw Error("Page number not valid (must be between 0 and 50");
     }
-
-    // Loop over all subreddits and search terms to scrape
-    for (const subReddit of subRedditsUser) {
-        for (const searchTerm of searchTermsUser) {
-            await delay(1000); // delay so we don't get blocked for by the rate limit
-            await scrape(
-                0,
-                URLFunc(subReddit, searchTerm),
-                subReddit,
-                searchTerm,
-            );
+    try {
+        // Loop over all subreddits and search terms to scrape
+        for (const subReddit of subRedditsUser) {
+            for (const searchTerm of searchTermsUser) {
+                await delay(1000); // delay so we don't get blocked for by the rate limit
+                await scrape(
+                    0,
+                    URLFunc(subReddit, searchTerm),
+                    subReddit,
+                    searchTerm,
+                );
+            }
         }
+    } catch (e) {
+        console.error(e);
     }
 
     // If data Array has elements, then save it to a file
