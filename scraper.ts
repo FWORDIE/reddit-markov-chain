@@ -85,7 +85,7 @@ const main = async (filename: string, help: boolean) => {
         ?.replaceAll(" ", "") // Remove spaces
         .split(",") // split on commas to an array
         .filter(Boolean); //  remove blank items in array
-    console.log(subRedditsUser);
+
     if (!subRedditsUser || subRedditsUser.length < 1) {
         throw Error("No Subreddits Listed");
     }
@@ -136,7 +136,10 @@ const main = async (filename: string, help: boolean) => {
 
     // If data Array has elements, then save it to a file
     if (dataArray.length > 1) {
-        await Deno.writeTextFile(`data/${filename}.json`, JSON.stringify(dataArray));
+        await Deno.writeTextFile(
+            `data/${filename}.json`,
+            JSON.stringify(dataArray),
+        );
     }
 };
 
@@ -159,8 +162,9 @@ const scrape = async (
 
         // in the body, find all the elements element with class .search-result
         const posts = $("body").find(".search-result");
-
-        // loop over all posts returned
+        if (!res.ok) {
+            console.log(res.statusText);
+        } // loop over all posts returned
         posts.each((_i, post) => {
             const object = {
                 title: $(post).find(".search-title").text(),

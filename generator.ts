@@ -7,6 +7,7 @@ import {
     tokenize,
     startString,
 } from "./tokeniser.ts";
+import { findARPAbet } from "./ryhmingStuff.ts";
 
 // TS type
 type transitionType = {
@@ -61,7 +62,9 @@ const collectTransitions = (samples: string[][]) => {
         const state = fromTokens(restTokens); // Makes it unquie
         const next = lastToken;
 
-        // e.g. With sampleSize of 3 -> "I'm" goes to "_+I:["'m"]"
+        const ARPAInfo = findARPAbet(state)
+
+        console.log(ARPAInfo)
 
         // Check if we already have this start token, copy it or start afresh
         transitions[state] = transitions[state] ?? [];
