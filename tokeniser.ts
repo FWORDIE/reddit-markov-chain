@@ -3,6 +3,8 @@
 // Start and End Strings
 export const startString = "¤";
 export const endString = "±";
+export const lineEnder = "¬";
+export const poemEnder = "␡";
 
 // Identify new space and repalce with a specail char
 const newlinesRegex = /\n\s*/g;
@@ -87,6 +89,8 @@ export const textify = (tokens: string[] | undefined) => {
         return tokens
             .join("")
             .replaceAll(NEWLINE_PLACEHOLDER, PARAGRAPH_CHARACTER)
+            .replaceAll(lineEnder, PARAGRAPH_CHARACTER)
+            .replaceAll(poemEnder, "")
             .replaceAll(startString, "")
             .replaceAll(endString, "");
     }

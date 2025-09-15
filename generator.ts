@@ -6,11 +6,23 @@ import {
     textify,
     tokenize,
     startString,
+    lineEnder,
+    poemEnder,
 } from "./tokeniser.ts";
-import { findARPAbet } from "./ryhmingStuff.ts";
+import { findARPAbet, findARPAAndSyllables } from "./ryhmingStuff.ts";
+
+// Global Vars
+let samples = [];
+let transitions: transitionsType = {};
+let sampleSize = 2;
+let ARPATable: ARPATableType = {};
 
 // TS type
-type transitionType = {
+type transitionsType = {
+    [key: string]: string[];
+};
+
+export type ARPATableType = {
     [key: string]: string[];
 };
 
@@ -35,14 +47,21 @@ const flags = parseArgs(Deno.args, {
 const random = (min: number, max: number) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
 // Return random from list
-const pickRandom = (list: string[]) => list[random(0, list.length - 1)];
+export const pickRandom = (list: string[]) => list[random(0, list.length - 1)];
 //join array of strings to one string
 const fromTokens = (tokens: string[]) => tokens.join("");
 
-// Slices the text/corpus into chains
+// Slices the text/corpus into chains and generate ARPATable
 const sliceCorpus = (corpus: string[], sampleSize: number) => {
     return corpus
         .map((_, index) => {
+            // get this word
+            const thisToken = corpus[index];
+            // get its ARPA from big table
+            const ARPAInfo = findARPAbet(thisToken.toLowerCase());
+            // Add this info to table
+            ARPATable[thisToken] = ARPAInfo;
+            // Return the normal slice info for the transtion Table
             return corpus.slice(index, index + sampleSize);
         })
         .filter((group) => {
@@ -51,7 +70,7 @@ const sliceCorpus = (corpus: string[], sampleSize: number) => {
 };
 
 const collectTransitions = (samples: string[][]) => {
-    return samples.reduce((transitions: transitionType, sample: string[]) => {
+    return samples.reduce((transitions: transitionsType, sample: string[]) => {
         // Split the sample into key tokens and the transition token:
         const lastIndex = sample.length - 1;
         const lastToken = sample[lastIndex];
@@ -62,10 +81,6 @@ const collectTransitions = (samples: string[][]) => {
         const state = fromTokens(restTokens); // Makes it unquie
         const next = lastToken;
 
-        const ARPAInfo = findARPAbet(state)
-
-        console.log(ARPAInfo)
-
         // Check if we already have this start token, copy it or start afresh
         transitions[state] = transitions[state] ?? [];
         // Push new possible coninuatons in it's array
@@ -75,7 +90,7 @@ const collectTransitions = (samples: string[][]) => {
 };
 
 // Returns a random token that starts with the startString
-const findAStart = (transitions: transitionType) => {
+const findAStart = (transitions: transitionsType) => {
     const possibleStartArray: string[] = [];
     for (const key in transitions) {
         // Checks if this transition key starts with the startString
@@ -89,7 +104,7 @@ const findAStart = (transitions: transitionType) => {
 
 // generator
 const newGenerator = (
-    transitions: transitionType,
+    transitions: transitionsType,
     startingString: string | undefined,
     wordsCount: number,
     continuous: boolean,
@@ -101,9 +116,19 @@ const newGenerator = (
 
     console.log(`Starting Generation with : ${textStartString}`);
     let chain = [...(startToken as string[])];
+
     while (true) {
         chain = [...chain, ...findNextToken(chain, transitions)];
 
+        if (chain.slice(-1)[0] == lineEnder) {
+            console.log("line end");
+            chain = [...chain, ...tokenize(findAStart(transitions))];
+        }
+
+        if (chain.slice(-1)[0] == poemEnder) {
+            console.log("poem end");
+            break;
+        }
         // Break if end token is found and not in continouus mode
         // Or if words count has reached max
         if (
@@ -116,22 +141,20 @@ const newGenerator = (
     return textify(chain);
 };
 
-const findNextToken = (chain: string[], transitions: transitionType) => {
+const findNextToken = (chain: string[], transitions: transitionsType) => {
     const lastTokens = chain.slice(-(sampleSize - 1));
 
     const key = fromTokens(lastTokens);
 
     const possibleTokens = transitions[key];
-
-    const nextToken = pickRandom(possibleTokens);
+    if (!flags.r) {
+        const nextToken = pickRandom(possibleTokens);
+        return [nextToken];
+    } else {
+        return findARPAAndSyllables(chain, ARPATable, possibleTokens);
+    }
     //   console.log( { nextToken });
-    return [nextToken];
 };
-
-// Global Vars
-let samples = [];
-let transitions: transitionType = {};
-let sampleSize = 2;
 
 const main = async () => {
     if (flags.t) {
@@ -162,6 +185,7 @@ const main = async () => {
                 const modelFile = {
                     sampleSize: sampleSize,
                     transitions: transitions,
+                    ARPATable: ARPATable,
                 };
                 await Deno.writeTextFile(
                     "model.json",
@@ -177,6 +201,7 @@ const main = async () => {
         const modelData = JSON.parse(await Deno.readTextFile("model.json"));
         sampleSize = modelData.sampleSize;
         transitions = modelData.transitions;
+        ARPATable = modelData.ARPATable;
         console.log(
             `Old Transitions Loaded: ${Object.keys(transitions).length} Transitions`,
         );
