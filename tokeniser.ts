@@ -1,5 +1,7 @@
 // Modified from here: https://dev.to/bespoyasov/text-generation-with-markov-chains-in-javascript-i38
 
+//TODO: number to text for syllables and arpa
+
 // Start and End Strings
 export const startString = "¤";
 export const endString = "±";
@@ -84,11 +86,14 @@ const PARAGRAPH_CHARACTER = "\n\n";
 
 // Texitify tokens
 // e.g ['hello', ' ', 'I',''','m',' ','Dave']  -> 'hello I'm Dave'
-export const textify = (tokens: string[] | undefined) => {
+export const textify = (
+    tokens: string[] | undefined,
+    poem: boolean = false,
+) => {
     if (tokens) {
         return tokens
             .join("")
-            .replaceAll(NEWLINE_PLACEHOLDER, PARAGRAPH_CHARACTER)
+            .replaceAll(NEWLINE_PLACEHOLDER, poem ? " " : PARAGRAPH_CHARACTER) // If poem don't respect linebreaks
             .replaceAll(lineEnder, PARAGRAPH_CHARACTER)
             .replaceAll(poemEnder, "")
             .replaceAll(startString, "")

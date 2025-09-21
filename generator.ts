@@ -6,7 +6,6 @@ import {
     textify,
     tokenize,
     startString,
-    lineEnder,
     poemEnder,
 } from "./tokeniser.ts";
 import { findARPAbet, findARPAAndSyllables } from "./ryhmingStuff.ts";
@@ -17,8 +16,20 @@ let transitions: transitionsType = {};
 let sampleSize = 2;
 let ARPATable: ARPATableType = {};
 
+// Poem Types
+const poemTypes = [
+    "null",
+    "limerick",
+    "random",
+    "haiku",
+    "sonnet",
+    "petrarchan",
+] as const;
+export type PoemTypes = (typeof poemTypes)[number];
+const isPoem = (x: any): x is PoemTypes => poemTypes.includes(x);
+
 // TS type
-type transitionsType = {
+export type transitionsType = {
     [key: string]: string[];
 };
 
@@ -33,14 +44,14 @@ export type ARPATableType = {
 //    file data must be a array of objects
 // k: object key of data e.g. 'title', 'body'
 // t: retrain makrov chain - default:false
-// n: max number of tokens to generate - default:'100'
+// n: max number of tokens to generate - default:'1000'
 // s: sample size, bigger is more deterministic
 
 const flags = parseArgs(Deno.args, {
-    boolean: ["r", "c", "t"],
-    string: ["f", "k", "n", "s"],
-    default: { r: false, c: false, t: false, n: "100", s: "3" },
-    negatable: ["r", "c", "t", "s"],
+    boolean: ["c", "t"],
+    string: ["p", "f", "k", "n", "s"],
+    default: { r: false, c: false, t: false, n: "1000", s: "3", p: "null" },
+    negatable: ["p", "c", "t", "s"],
 });
 
 // Return random Number between Min and Max
@@ -60,6 +71,7 @@ const sliceCorpus = (corpus: string[], sampleSize: number) => {
             // get its ARPA from big table
             const ARPAInfo = findARPAbet(thisToken.toLowerCase());
             // Add this info to table
+            //TODO: Commpound word e.g. chatbot (should serach for 't','ot','bot' etc)
             ARPATable[thisToken] = ARPAInfo;
             // Return the normal slice info for the transtion Table
             return corpus.slice(index, index + sampleSize);
@@ -90,7 +102,7 @@ const collectTransitions = (samples: string[][]) => {
 };
 
 // Returns a random token that starts with the startString
-const findAStart = (transitions: transitionsType) => {
+export const findAStart = (transitions: transitionsType) => {
     const possibleStartArray: string[] = [];
     for (const key in transitions) {
         // Checks if this transition key starts with the startString
@@ -114,16 +126,11 @@ const newGenerator = (
     const textStartString =
         textify(startToken) == "" ? "Start Characters" : textify(startToken);
 
-    console.log(`Starting Generation with : ${textStartString}`);
+    console.log(`Starting Text Generation with : ${textStartString}, ${continuous}`);
     let chain = [...(startToken as string[])];
 
     while (true) {
         chain = [...chain, ...findNextToken(chain, transitions)];
-
-        if (chain.slice(-1)[0] == lineEnder) {
-            console.log("line end");
-            chain = [...chain, ...tokenize(findAStart(transitions))];
-        }
 
         if (chain.slice(-1)[0] == poemEnder) {
             console.log("poem end");
@@ -138,7 +145,7 @@ const newGenerator = (
             break;
         }
     }
-    return textify(chain);
+    return textify(chain, flags.p != "null");
 };
 
 const findNextToken = (chain: string[], transitions: transitionsType) => {
@@ -147,11 +154,18 @@ const findNextToken = (chain: string[], transitions: transitionsType) => {
     const key = fromTokens(lastTokens);
 
     const possibleTokens = transitions[key];
-    if (!flags.r) {
+    if (flags.p == "null") {
+        //check if its a poem
         const nextToken = pickRandom(possibleTokens);
         return [nextToken];
     } else {
-        return findARPAAndSyllables(chain, ARPATable, possibleTokens);
+        return findARPAAndSyllables(
+            chain,
+            ARPATable,
+            possibleTokens,
+            transitions,
+            flags.p as PoemTypes,
+        );
     }
     //   console.log( { nextToken });
 };
@@ -206,12 +220,17 @@ const main = async () => {
             `Old Transitions Loaded: ${Object.keys(transitions).length} Transitions`,
         );
     }
+    if (!isPoem(flags.p)) {
+        throw Error(
+            `Error: Poem type " ${flags.p} " is not valid, must be one of ${JSON.stringify(poemTypes)}`,
+        );
+    }
 
     const output = await newGenerator(
         transitions,
         undefined,
         Number(flags.n),
-        flags.c,
+        flags.c || flags.p != "null",
     );
 
     // run the generator with params

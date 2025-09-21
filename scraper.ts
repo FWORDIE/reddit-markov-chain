@@ -121,7 +121,7 @@ const main = async (filename: string, help: boolean) => {
         // Loop over all subreddits and search terms to scrape
         for (const subReddit of subRedditsUser) {
             for (const searchTerm of searchTermsUser) {
-                await delay(1000); // delay so we don't get blocked for by the rate limit
+                await delay(1500); // delay so we don't get blocked for by the rate limit
                 await scrape(
                     0,
                     URLFunc(subReddit, searchTerm),
