@@ -433,6 +433,8 @@ const endLine = (nextItems: string[], poem: poemStructure) => {
     syllableOverflow = 0;
     // console.log("line end");
     if (lineNum >= poem.scheme.length) {
+        lineNum = 0;
+        randomPoemStruture = undefined;
         return [...nextItems, poemEnder];
     }
     return [...nextItems, lineEnder];
