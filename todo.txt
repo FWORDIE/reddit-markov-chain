@@ -2,10 +2,10 @@
 
 - Syllables Count on numbers
 // Add 2 more poem structures
-- Better commands for Gen
+// Better commands for Gen
 // Gen on going
 - ReadMe file
-- help on generator
+// help on generator
 - command line optimize
 - close brackets
 // output to txt file
