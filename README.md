@@ -17,9 +17,12 @@ In it's standard config it will do my project but here is some code to do what e
 
 Step 1: Download and install Deno
     - https://docs.deno.com/runtime/getting_started/installation/
+
 Step 2: Run the scraper
     - Deno -A scraper.ts
+
 Step 3: Run the generator with args listed below
+
     - Deno -A generator.ts
 
 
