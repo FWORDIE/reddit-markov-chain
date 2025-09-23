@@ -32,7 +32,26 @@ const poemTypes = [
 export type PoemTypes = (typeof poemTypes)[number];
 const isPoem = (x: any): x is PoemTypes => poemTypes.includes(x);
 
-const debugMode = true;
+const debugMode = false;
+
+type CloserType = [
+  string,
+  string,
+  number,
+];
+
+const closureNeediness = 0.2;
+
+const needsClosure: CloserType[] = [
+  [`(`, `)`, closureNeediness],
+  [`{`, `}`, closureNeediness],
+  [`[`, `]`, closureNeediness],
+  [
+    `"`,
+    `"`,
+    closureNeediness,
+  ],
+];
 
 // TS type
 export type transitionsType = {
@@ -105,12 +124,17 @@ Default: NONE
 Only if used if training - (bigger is more deterministic)
 Accepts: Number as string
 Default: '3'
+
+-d: debug mode
+does some console logging of stuff, WIP
+Accepts: boolean
+Default: false
     `,
   );
 };
 
 const flags = parseArgs(Deno.args, {
-  boolean: ["c", "t", "h"],
+  boolean: ["c", "t", "h", "d"],
   string: ["p", "f", "k", "n", "s"],
   default: {
     r: false,
@@ -120,8 +144,9 @@ const flags = parseArgs(Deno.args, {
     s: "3",
     p: "null",
     h: false,
+    d: false,
   },
-  negatable: ["p", "c", "t", "s", "h"],
+  negatable: ["p", "c", "t", "s", "h", "d"],
 });
 
 // Return random Number between Min and Max
@@ -228,8 +253,44 @@ const findNextToken = (chain: string[], transitions: transitionsType) => {
   const lastTokens = chain.slice(-(sampleSize - 1));
 
   const key = fromTokens(lastTokens);
+  let possibleTokens = transitions[key];
 
-  const possibleTokens = transitions[key];
+  // close open tokens e.g. '(','[','"'
+  // loop over all closure tokens
+  needsClosure.map((closer) => {
+    //check if they exist in the string so far
+    let openerOccurances = chain.filter((string) => {
+      return string.includes(closer[0]);
+    }).length;
+    let closerOccurances = chain.filter((string) => {
+      return string.includes(closer[1]);
+    }).length;
+
+    // if there are more open then close tokens
+    if (openerOccurances > closerOccurances) {
+      // caculate how much we need to close the open
+      const forceClose = Math.random() < closer[2];
+      if (forceClose) {
+        // filter possibles for tokens that would close the open
+        let newPossibleTokens = possibleTokens.filter((string) => {
+          return string.includes(closer[1]);
+        });
+        // if there are possibles use these as possible tokens
+        if (newPossibleTokens.length > 0) {
+          possibleTokens = newPossibleTokens;
+          // reset the need
+          closer[2] = closureNeediness;
+        } else {
+          // make the need greater
+          closer[2] += closureNeediness;
+        }
+      } else {
+        // make the need greater
+        closer[2] += closureNeediness;
+      }
+    }
+  });
+
   if (flags.p == "null") {
     //check if its a poem
     const nextToken = pickRandom(possibleTokens);

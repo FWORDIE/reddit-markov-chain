@@ -8,10 +8,10 @@ In it's standard config it will do my project but here is some code to do what e
 
 ### Key features
 
- - The Chain can start and stop by 'learning' how the dataset items start and stop
- - Generate poems (bad)
- - Generate text (meh)
- - A scraper that can scrape reddit
+- The Chain can start and stop by 'learning' how the dataset items start and stop
+- Generate poems (bad)
+- Generate text (meh)
+- A scraper that can scrape reddit
 
 ### How to use
 
@@ -26,7 +26,6 @@ Step 2: Run the scraper
 Step 3: Run the generator with args listed below
 
     - Deno -A generator.ts
-
 
 ### The Scraper (scraper.ts)
 
@@ -53,6 +52,7 @@ This generator uses the data set the scraper made to crate a markov chain and th
 ```
 e.g. Deno run -A generator.ts
 ```
+
 ```
 --- Args ---
 
@@ -92,5 +92,10 @@ Default: NONE
 Only if used if training - (bigger is more deterministic)
 Accepts: Number as string
 Default: '3'
+
+-d: debug mode
+does some console logging of stuff, WIP
+Accepts: boolean
+Default: false
 
 ```
