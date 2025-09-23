@@ -1,3 +1,5 @@
+// In part inspired by https://dev.to/bespoyasov/text-generation-with-markov-chains-in-javascript-i38
+
 // import { textify, tokenize } from "./tokeniser.ts";
 import { parseArgs } from "jsr:@std/cli/parse-args";
 import {
@@ -44,45 +46,66 @@ export type ARPATableType = {
 const help = () => {
   console.log(
     `
- --- Args ---
+--- Basic Info ---
+This is a markov chain generator built in TS and Deno.
+It can be trained with an array of objects contained in a JSON dataset.
+It's built by me, Fred Wordie, and is a little bit clunky at times and spleling bad.
 
- -h: list helpful stuff
+--- Key features ---
 
- -p: Turn output into a rhyming poem
-  Accepts: "null","limerick","random","haiku","sonnet","petrarchan"
-  Default: "null"
+- The Chain can start and stop by 'learning' how the dataset items start and stop
+- Generate poems (bad)
+- Generate text
+- A scraper that can scrape reddit
 
- -c: Keep generating after reaching an end character
-  Accepts: boolean
-  Default: false
+--- How to use ---
 
- -n: max number of tokens to generate
-  Accepts: Number as string
-  Default: '1000'
+Step 1: Download and install Deno
+- https://docs.deno.com/runtime/getting_started/installation/
+Step 2: Run the scraper
+- Deno -A scraper.ts
+Step 3: Run the generator with args listed below
+- Deno -A generator.ts
 
- -o: output to file
-  Accepts: boolean
-  Defualt: false
+--- Args ---
 
- -t: Train makrov chain
-  Accepts: boolean
-  Default: false
+-h: list helpful stuff
 
- -f: location of json file that has data -
-  Required if training (file data must be a array of objects)
-  Accepts: string
-  Default: NONE
+-p: Turn output into a rhyming poem
+Accepts: "null","limerick","random","haiku","sonnet","petrarchan"
+Default: "null"
 
- -k: object key of data
-  Required if training (e.g. 'body','title)
-  Accepts: string
-  Default: NONE
+-c: Keep generating after reaching an end character
+Accepts: boolean
+Default: false
 
- -s: sample size
-  Only if used if training - (bigger is more deterministic)
-  Accepts: Number as string
-  Default: '3'
-     `,
+-n: max number of tokens to generate
+Accepts: Number as string
+Default: '1000'
+
+-o: output to file
+Accepts: boolean
+Defualt: false
+
+-t: Train makrov chain
+Accepts: boolean
+Default: false
+
+-f: location of json file that has data -
+Required if training (file data must be a array of objects)
+Accepts: string
+Default: NONE
+
+-k: object key of data
+Required if training (e.g. 'body','title)
+Accepts: string
+Default: NONE
+
+-s: sample size
+Only if used if training - (bigger is more deterministic)
+Accepts: Number as string
+Default: '3'
+    `,
   );
 };
 
@@ -324,7 +347,7 @@ const main = async () => {
     }
 
     // prompt to do ongoing prompts
-    generate = prompt("Whould you like to generate again? [y/n]", "y") == "y";
+    generate = prompt("Would you like to generate again? [y/n]", "y") == "y";
   }
 };
 
