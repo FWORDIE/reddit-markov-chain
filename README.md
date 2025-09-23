@@ -30,21 +30,23 @@ It compiles the data into an JSON array of objects with title, body, date, link,
 
 For most use cases, just follow the instructions...
 
-e.g. Deno run -A scraper.ts -f
+```e.g. Deno run -A scraper.ts -f
+```
 
-
+```
 -- Args --
 
 -h: see help info
 -f: filename to save to (defualt: redditData)
-
+```
 
 ### The Generator (generator.ts)
 
 This generator uses the data set the scraper made to crate a markov chain and then generate text according to rules.
 
+```
 e.g. Deno run -A generator.ts
-
+```
 --- Args ---
 
 -h: list helpful stuff
