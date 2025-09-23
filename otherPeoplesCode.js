@@ -3,87 +3,226 @@
 // actual  conversion code starts here
 
 var ones = [
-    "",
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "nine",
+  "",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
 ];
 var tens = [
-    "",
-    "",
-    "twenty",
-    "thirty",
-    "forty",
-    "fifty",
-    "sixty",
-    "seventy",
-    "eighty",
-    "ninety",
+  "",
+  "",
+  "twenty",
+  "thirty",
+  "forty",
+  "fifty",
+  "sixty",
+  "seventy",
+  "eighty",
+  "ninety",
 ];
 var teens = [
-    "ten",
-    "eleven",
-    "twelve",
-    "thirteen",
-    "fourteen",
-    "fifteen",
-    "sixteen",
-    "seventeen",
-    "eighteen",
-    "nineteen",
+  "ten",
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+  "nineteen",
 ];
 
 function convert_millions(num) {
-    if (num >= 1000000) {
-        return (
-            convert_millions(Math.floor(num / 1000000)) +
-            " million " +
-            convert_thousands(num % 1000000)
-        );
-    } else {
-        return convert_thousands(num);
-    }
+  if (num >= 1000000) {
+    return (
+      convert_millions(Math.floor(num / 1000000)) +
+      " million " +
+      convert_thousands(num % 1000000)
+    );
+  } else {
+    return convert_thousands(num);
+  }
 }
 
 function convert_thousands(num) {
-    if (num >= 1000) {
-        return (
-            convert_hundreds(Math.floor(num / 1000)) +
-            " thousand " +
-            convert_hundreds(num % 1000)
-        );
-    } else {
-        return convert_hundreds(num);
-    }
+  if (num >= 1000) {
+    return (
+      convert_hundreds(Math.floor(num / 1000)) +
+      " thousand " +
+      convert_hundreds(num % 1000)
+    );
+  } else {
+    return convert_hundreds(num);
+  }
 }
 
 function convert_hundreds(num) {
-    if (num > 99) {
-        return (
-            ones[Math.floor(num / 100)] + " hundred " + convert_tens(num % 100)
-        );
-    } else {
-        return convert_tens(num);
-    }
+  if (num > 99) {
+    return (
+      ones[Math.floor(num / 100)] + " hundred " + convert_tens(num % 100)
+    );
+  } else {
+    return convert_tens(num);
+  }
 }
 
 function convert_tens(num) {
-    if (num < 10) return ones[num];
-    else if (num >= 10 && num < 20) return teens[num - 10];
-    else {
-        return tens[Math.floor(num / 10)] + " " + ones[num % 10];
-    }
+  if (num < 10) return ones[num];
+  else if (num >= 10 && num < 20) return teens[num - 10];
+  else {
+    return tens[Math.floor(num / 10)] + " " + ones[num % 10];
+  }
 }
 
 export function convert(num) {
-    if (num == 0) return "zero";
-    else return convert_millions(num);
+  if (num == 0) return "zero";
+  else return convert_millions(num);
 }
 
 //end of conversion code
+
+// Really rough and not accurate way to count syllables
+// stolen from:
+// https://github.com/EndaHallahan/syllabificate/blob/master/index.js
+
+export const countSyllables = (inString) => {
+  // added by Fred for numbers
+
+  if (!isNaN(inString) && inString != " ") {
+    inString = convert(inString.replaceAll(" ", ""));
+  }
+
+  let syllablesTotal = 0;
+  const wordList = inString.match(/(?:(?:\w-\w)|[\wÀ-ÿ'’])+/g);
+  if (wordList) {
+    wordList.forEach((word) => {
+      if (word === "'" || word === "’") {
+        return;
+      } //bandaid solution.
+      if (word.length <= 2) {
+        syllablesTotal += 1;
+        return;
+      } //quick return on short words
+      let syllables = 0;
+      if (word.endsWith("s'") || word.endsWith("s’")) {
+        word.slice(-1);
+      } //ending with s'
+      if (word.endsWith("s's") || word.endsWith("s’s")) {
+        word.slice(-1, -3);
+      } //ending with s's
+      const cEndings = word.match(
+        /(?<=\w{3})(side|\wess|(?<!ed)ly|ment|ship|board|ground|(?<![^u]de)ville|port|ful(ly)?|berry|box|nesse?|such|m[ae]n|wom[ae]n|anne)s?$/im,
+      );
+      if (cEndings) {
+        word = word.replace(cEndings[0], "\n" + cEndings[0]);
+      } //Splits into two words and evaluates them as such
+      const cBeginnings = word.match(
+        /^(ware|side(?![sd]$)|p?re(?!ach|agan|al|au)|[rf]ace(?!([sd]|tte)$)|place[^nsd])/im,
+      );
+      if (cBeginnings) {
+        word = word.replace(cBeginnings[0], "");
+        syllables++;
+      }
+      const esylp = word.match(
+        /ie($|l|t|rg)|([cb]|tt|pp)le$|phe$|kle(s|$)|[^n]scien|sue|aybe$|[^aeiou]shed|[^lsoai]les$|([^e]r|g)ge$|(gg|ck|yw|etch)ed$|(sc|o)he$|seer|^re[eiuy]/gim,
+      );
+      if (esylp) {
+        syllables += esylp.length;
+      } //E clustered positive
+      const esylm = word.match(
+        /every|some([^aeiouyr]|$)|[^trb]ere(?!d|$|o|r|t|a[^v]|n|s|x)|[^g]eous|niet/gim,
+      );
+      if (esylm) {
+        syllables -= esylm.length;
+      } //E clustered negative
+      const isylp = word.match(
+        /rie[^sndfvtl]|(?<=^|[^tcs]|st)ia|siai|[^ct]ious|quie|[lk]ier|settli|[^cn]ien[^d]|[aeio]ing$|dei[tf]|isms?$/gim,
+      );
+      if (isylp) {
+        syllables += isylp.length;
+      } //I clustered positive
+      const osylp = word.match(
+        /nyo|osm(s$|$)|oinc|ored(?!$)|(^|[^ts])io|oale|[aeiou]yoe|^m[ia]cro([aiouy]|e)|roe(v|$)|ouel|^proa|oolog/gim,
+      );
+      if (osylp) {
+        syllables += osylp.length;
+      } //O clustered positive
+      const osylm = word.match(
+        /[^f]ore(?!$|[vcaot]|d$|tte)|fore|llio/gim,
+      );
+      if (osylm) {
+        syllables -= osylm.length;
+      } //O clustered negative
+      const asylp = word.match(
+        /asm(s$|$)|ausea|oa$|anti[aeiou]|raor|intra[ou]|iae|ahe$|dais|(?<!p)ea(l(?!m)|$)|(?<!j)ean|(?<!il)eage/gim,
+      );
+      if (asylp) {
+        syllables += asylp.length;
+      } //A clustered positive
+      const asylm = word.match(/aste(?!$|ful|s$|r)|[^r]ared$/gim);
+      if (asylm) {
+        syllables -= asylm.length;
+      } //A clustered negative
+      const usylp = word.match(
+        /uo[^y]|[^gq]ua(?!r)|uen|[^g]iu|uis(?![aeiou]|se)|ou(et|ille)|eu(ing|er)|uye[dh]|nuine|ucle[aeiuy]/gim,
+      );
+      if (usylp) {
+        syllables += usylp.length;
+      } //U clustered positive
+      const usylm = word.match(/geous|busi|logu(?!e|i)/gim);
+      if (usylm) {
+        syllables -= usylm.length;
+      } //U clustered negative
+      const ysylp = word.match(
+        /[ibcmrluhp]ya|nyac|[^e]yo|[aiou]y[aiou]|[aoruhm]ye(tt|l|n|v|z)|pye|dy[ae]|oye[exu]|lye[nlrs]|olye|aye(k|r|$|u[xr]|da)|saye\w|iye|wy[ae]|[^aiou]ying/gim,
+      );
+      if (ysylp) {
+        syllables += ysylp.length;
+      } //Y clustered positive
+      const ysylm = word.match(/arley|key|ney$/gim);
+      if (ysylm) {
+        syllables -= ysylm.length;
+      }
+      const essuffix = word.match(
+        /((?<!c[hrl]|sh|[iszxgej]|[niauery]c|do)es$)/gim,
+      );
+      if (essuffix) {
+        syllables--;
+      } //es suffix
+      const edsuffix = word.match(
+        /([aeiouy][^aeiouyrdt]|[^aeiouy][^laeiouyrdtbm]|ll|bb|ield|[ou]rb)ed$|[^cbda]red$/gim,
+      );
+      if (edsuffix) {
+        syllables--;
+      }
+      const csylp = word.match(/chn[^eai]|mc|thm/gim);
+      if (csylp) {
+        syllables += csylp.length;
+      } //Consonant clustered negative
+      const eVowels = word.match(
+        /[aiouy](?![aeiouy])|ee|e(?!$|-|[iua])/gim,
+      );
+      if (eVowels) {
+        syllables += eVowels.length;
+      } //Applicable vowel count (all but e at end of word)
+      if (syllables <= 0) {
+        syllables = 1;
+      } //catch-all
+      if (word.match(/[^aeiou]n['’]t$/i)) {
+        syllables++;
+      } //ending in n't, but not en't
+      if (word.match(/en['’]t$/i)) {
+        syllables--;
+      } //ending in en't
+      syllablesTotal += syllables;
+    });
+  }
+  return syllablesTotal;
+};

@@ -4,8 +4,9 @@
 // Add 2 more poem structures
 // Better commands for Gen
 // Gen on going
-- ReadMe file
+// ReadMe file
 // help on generator
-- command line optimize
-- close brackets
+// command line optimize
+// close brackets
 // output to txt file
+// Count syllables of numbers
