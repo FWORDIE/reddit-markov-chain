@@ -30,7 +30,8 @@ It compiles the data into an JSON array of objects with title, body, date, link,
 
 For most use cases, just follow the instructions...
 
-```e.g. Deno run -A scraper.ts -f
+```
+e.g. Deno run -A scraper.ts -f
 ```
 
 ```
@@ -46,6 +47,7 @@ This generator uses the data set the scraper made to crate a markov chain and th
 
 ```
 e.g. Deno run -A generator.ts
+```
 ```
 --- Args ---
 
@@ -85,3 +87,5 @@ Default: NONE
 Only if used if training - (bigger is more deterministic)
 Accepts: Number as string
 Default: '3'
+
+```
