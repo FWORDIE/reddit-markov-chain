@@ -1,6 +1,5 @@
 ## Todo
 
-- Syllables Count on numbers
 // Add 2 more poem structures
 // Better commands for Gen
 // Gen on going
@@ -10,3 +9,8 @@
 // close brackets
 // output to txt file
 // Count syllables of numbers
+
+## Phase 2
+
+- Scrape reddit comments based on search
+- generate and scrape in one function

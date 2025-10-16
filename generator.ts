@@ -18,6 +18,9 @@ let transitions: transitionsType = {};
 let sampleSize = 2;
 let ARPATable: ARPATableType = {};
 let generate = true;
+let poem: PoemTypes = "null";
+let continious: boolean = false;
+let num: number = 1000;
 
 // Poem Types
 const poemTypes = [
@@ -158,7 +161,7 @@ export const pickRandom = (list: string[]) => list[random(0, list.length - 1)];
 const fromTokens = (tokens: string[]) => tokens.join("");
 
 // Slices the text/corpus into chains and generate ARPATable
-const sliceCorpus = (corpus: string[], sampleSize: number) => {
+export const sliceCorpus = (corpus: string[], sampleSize: number) => {
   return corpus
     .map((_, index) => {
       // get this word
@@ -176,7 +179,7 @@ const sliceCorpus = (corpus: string[], sampleSize: number) => {
     });
 };
 
-const collectTransitions = (samples: string[][]) => {
+export const collectTransitions = (samples: string[][]) => {
   return samples.reduce((transitions: transitionsType, sample: string[]) => {
     // Split the sample into key tokens and the transition token:
     const lastIndex = sample.length - 1;
@@ -210,7 +213,7 @@ export const findAStart = (transitions: transitionsType) => {
 };
 
 // generator
-const newGenerator = (
+export const newGenerator = (
   transitions: transitionsType,
   startingString: string | undefined,
   wordsCount: number,
@@ -246,7 +249,7 @@ const newGenerator = (
       break;
     }
   }
-  return textify(chain, flags.p != "null");
+  return textify(chain, poem != "null");
 };
 
 const findNextToken = (chain: string[], transitions: transitionsType) => {
@@ -291,7 +294,7 @@ const findNextToken = (chain: string[], transitions: transitionsType) => {
     }
   });
 
-  if (flags.p == "null") {
+  if (poem == "null") {
     //check if its a poem
     const nextToken = pickRandom(possibleTokens);
     return [nextToken];
@@ -301,7 +304,7 @@ const findNextToken = (chain: string[], transitions: transitionsType) => {
       ARPATable,
       possibleTokens,
       transitions,
-      flags.p as PoemTypes,
+      poem as PoemTypes,
     );
   }
 };
@@ -380,6 +383,12 @@ const main = async () => {
       }`,
     );
   }
+  // compile flags to make more generic
+
+  poem = flags.p;
+  num = Number(flags.n);
+  continious = flags.c;
+
   while (generate === true) {
     if (debugMode) {
       console.log("FLAGS:");
@@ -388,8 +397,8 @@ const main = async () => {
     const output = newGenerator(
       transitions,
       undefined,
-      Number(flags.n),
-      flags.c || flags.p != "null",
+      num,
+      continious || poem != "null",
     );
 
     // run the generator with params

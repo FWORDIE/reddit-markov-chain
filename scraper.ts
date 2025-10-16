@@ -12,7 +12,7 @@ const flags = parseArgs(Deno.args, {
 });
 
 // Basic delay func
-const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+export const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 // List of search Terms
 const searchTermsDefaults = ["ChatGPT", "ai"];
@@ -32,7 +32,7 @@ const pageMaxDefault = 10;
 let pageMax = 10;
 
 // constructing URL to scrape
-const URLFunc = (subreddit: string, searchTerm: string) => {
+export const URLFunc = (subreddit: string, searchTerm: string) => {
   return (
     "https://old.reddit.com/r/" +
     subreddit +
