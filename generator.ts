@@ -22,6 +22,9 @@ let poem: PoemTypes = "null";
 let continious: boolean = false;
 let num: number = 1000;
 
+let saveArray = [];
+let totalOutput = 100;
+
 // Poem Types
 const poemTypes = [
   "null",
@@ -137,7 +140,7 @@ Default: false
 };
 
 const flags = parseArgs(Deno.args, {
-  boolean: ["c", "t", "h", "d"],
+  boolean: ["c", "t", "h", "d", "m"],
   string: ["p", "f", "k", "n", "s"],
   default: {
     r: false,
@@ -148,8 +151,9 @@ const flags = parseArgs(Deno.args, {
     p: "null",
     h: false,
     d: false,
+    m: false,
   },
-  negatable: ["p", "c", "t", "s", "h", "d"],
+  negatable: ["p", "c", "t", "s", "h", "d", "m"],
 });
 
 // Return random Number between Min and Max
@@ -416,8 +420,33 @@ const main = async () => {
       Deno.writeTextFile(`./outputs/${fileName}.txt`, output);
     }
 
-    // prompt to do ongoing prompts
-    generate = prompt("Would you like to generate again? [y/n]", "y") == "y";
+    //to generate lots
+    if (flags.m) {
+      // if reaches minimum min char count ad to save array
+      console.log("LENG: ", saveArray.length);
+      if (
+        (output.toLowerCase().includes("ai") ||
+          output.toLowerCase().includes("chatgpt") ||
+          output.toLowerCase().includes("chatbot") ||
+          output.toLowerCase().includes("openai")) || Math.random() > 0.2
+      ) {
+        saveArray.push(output);
+      }
+      // if less then total utput keep generating
+      if (saveArray.length < totalOutput) {
+        generate = true;
+      } else {
+        const fileName = "title_" + sampleSize + "_" + Date.now();
+        Deno.writeTextFile(
+          `./outputs/${fileName}.json`,
+          JSON.stringify(saveArray),
+        );
+        generate = false;
+      }
+    } else {
+      // prompt to do ongoing prompts
+      generate = prompt("Would you like to generate again? [y/n]", "y") == "y";
+    }
   }
 };
 

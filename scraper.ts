@@ -11,11 +11,13 @@ const flags = parseArgs(Deno.args, {
   negatable: ["h"],
 });
 
+const delayTime = 5000;
+
 // Basic delay func
 export const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 // List of search Terms
-const searchTermsDefaults = ["ChatGPT", "ai"];
+const searchTermsDefaults = ["ChatGPT", "ai","Chatbot"];
 
 // List of Subreddits
 const subRedditsDefualts = [
@@ -25,6 +27,8 @@ const subRedditsDefualts = [
   "AmItheAsshole",
   "relationships",
   "confessions",
+  "dating",
+  "Marriage"
 ];
 
 // Max Number of pages to scrape
@@ -122,7 +126,7 @@ const main = async (filename: string, help: boolean) => {
     // Loop over all subreddits and search terms to scrape
     for (const subReddit of subRedditsUser) {
       for (const searchTerm of searchTermsUser) {
-        await delay(1500); // delay so we don't get blocked for by the rate limit
+        await delay(delayTime); // delay so we don't get blocked for by the rate limit
         await scrape(
           0,
           URLFunc(subReddit, searchTerm),
@@ -188,6 +192,7 @@ const scrape = async (
       if (nextButton) {
         const nextUrl = $(nextButton).attr("href");
         if (nextUrl) {
+          await delay(delayTime);
           return scrape(page, nextUrl, subReddit, searchTerm);
         }
       }
